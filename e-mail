@@ -38,20 +38,22 @@ def enviar_email_cobranca_avulsa():
     try:
         # Selecionar arquivo Excel
         CAMINHO_EXCEL = filedialog.askopenfilename(initialdir="/", title="Selecione um arquivo", filetypes=(("Arquivos do Excel", ".xlsx"), ("Todos os arquivos", ".*")))
-        CAMINHO_IMAGEM = f'{os.path.dirname(os.path.dirname(os.path.realpath(_file_)))}/arquivos/Assinatura.png'
+        
+        # Corrigir caminho para imagem de assinatura
+        CAMINHO_IMAGEM = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'arquivos', 'Assinatura.png')
 
-        # Verificar se imagem existe
+        # Verificar se a imagem existe
         if not os.path.exists(CAMINHO_IMAGEM):
             raise FileNotFoundError("Imagem de assinatura não encontrada.")
 
         # Abrindo abas do Excel
         df1 = pd.read_excel(CAMINHO_EXCEL, sheet_name='COBRANÇA_AVULSA')
-        df2 = pd.read_excel(CAMINHO_EXCEL, sheet_name=f'MAILING')
+        df2 = pd.read_excel(CAMINHO_EXCEL, sheet_name='MAILING')
 
         # Envio de emails
         for i, mutuario_plan1 in enumerate(df1['Mutuário']):
             plano = df1.loc[i, 'Plano']
-            data_vencimento = df1.loc[i, 'Vencimento'].strftime("%d/%m/%Y")
+            data_vencimento = pd.to_datetime(df1.loc[i, 'Vencimento']).strftime("%d/%m/%Y")
             valor_parcela = ponto_para_virgula(df1.loc[i, 'Total em R$'])
 
             # Verificar se a data de vencimento está nas datas habituais
@@ -93,7 +95,6 @@ def enviar_email_cobranca_avulsa():
             email.Send()
             print(f"Email enviado para {mutuario_plan1}")
 
-        # Fechar instância do Outlook
-        outlook.Quit()
     except Exception as e:
         print(f"Erro: {str(e)}")
+
